@@ -1,0 +1,36 @@
+# choose unit system. see manual
+units		metal
+# 3d periodic system
+boundary	p p p
+# atoms have charge
+atom_style	charge
+# read the unit cell structure of alpha-quartz (3SiO2) in data.quartz file
+read_data	data.dat
+# set inital velocity of particles for T=300K
+velocity	all create 2000.0 277387 mom yes
+pair_style buck/coul/long 10.0
+
+pair_coeff 1 1  1.0e-40		1.0e-40		0.0
+pair_coeff 1 2  18003.7572	3.87318		133.5381
+pair_coeff 2 2  1388.733	2.76000		175.0000
+
+
+kspace_style ewald/disp 1e-4
+# set neighour atom list
+neighbor	0.3 bin
+neigh_modify	delay 10
+
+# nve ensemble simulaton with dt=1 fs
+fix	1 all nve
+thermo		10000
+timestep	0.001
+
+# output trajectory to xyz file every 10 timesteps
+dump 1 all xyz 200000 trajectory.xyz 
+dump_modify	1 element  1 2
+
+# run 400000 time steps
+start		temp.restart.*
+run		4000000
+write_start	SiO2_restart.dat
+

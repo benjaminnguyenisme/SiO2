@@ -1,0 +1,185 @@
+LAMMPS (16 Feb 2016)
+  using 1 OpenMP thread(s) per MPI task
+# test BHS potential for alpha-quartz
+# check the lammps manual for details
+
+# choose unit system. see manual                       Lam Tu Ngay 23/11/2017
+units		metal
+
+# schedule
+variable TK1   equal 3500
+variable Pbar1 equal  -20.0e3
+
+# 3d periodic system
+boundary	p p p
+
+# atoms have charge
+atom_style	charge
+
+# read the unit cell structure
+read_restart	restart_SiO2.dat
+  orthogonal box = (0.654742 0.654742 0.654742) to (66.3103 66.3103 66.3103)
+  8 by 8 by 8 MPI processor grid
+  19998 atoms
+
+group Si type 1
+6666 atoms in group Si
+group O type 2
+13332 atoms in group O
+
+
+#read_data	dataSiO2.dat
+
+#change_box all triclinic
+#change_box all ortho
+
+
+# make 8x8x8 supercell. 9  atoms
+#replicate       10 10 10
+
+# BKS interaction in PRL 64 1955 (1990)
+# with Ewald method for long range coulomb
+pair_style hybrid/overlay buck/coul/long 10.0 mie/cut 10.0
+pair_modify shift yes
+pair_coeff 1 1 buck/coul/long 0.0 1.0 0.0
+pair_coeff 1 2 buck/coul/long 18003.757200 0.205205 133.538100
+pair_coeff 2 2 buck/coul/long 1388.773000 0.362319 175.000000
+pair_coeff 1 1 mie/cut 0           1         30 6
+pair_coeff 1 2 mie/cut 0.006629499 1.3133635 30 6
+pair_coeff 2 2 mie/cut 0.002249211 1.779239  30 6
+kspace_style ewald/disp 1e-6
+
+# set inital velocity of particles for T=6000K
+velocity	all create 3500  277387 mom yes
+
+# set neighour atom list
+neighbor	0.3 bin
+neigh_modify	delay 10
+
+# nve ensemble simulaton with dt=1 fs
+timestep	0.001
+thermo          10000
+#thermo_style    custom step temp pxx pyy pzz pxy pxz pyz lx ly lz xy xz yz press vol
+thermo_style  custom step temp press  vol density
+
+
+
+# output xyz trajectory file
+ dump 1 all xyz 5000 trajectory.xyz
+ dump_modify	1 element 1 2
+
+#dump            1 all atom 10000 SiO2_${Pbar1}bar_${TK1}K.lammpstrj
+
+
+fix		1 all nve
+
+compute 1 Si  msd
+Resetting per-atom state of Fix 1_COMPUTE_STORE Style STORE from restart file info
+fix 2  Si  ave/time  1  1   1000   c_1[4]  file SiO2_si.msd
+
+compute 2 O  msd
+Resetting per-atom state of Fix 2_COMPUTE_STORE Style STORE from restart file info
+fix 3  O  ave/time  1  1   1000   c_2[4]  file SiO2_O.msd
+
+
+# run 2000 time steps
+#fix             1 all npt temp ${TK1}  ${TK1} 50 iso ${Pbar1} ${Pbar1} 500
+# run 1000 time  steps
+restart     50000       restart.*
+run         500000
+EwaldDisp initialization ...
+  G vector = 0.361804
+Neighbor list info ...
+  4 neighbor list requests
+  update every 1 steps, delay 10 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 10.3
+  ghost atom cutoff = 10.3
+  binsize = 5.15 -> bins = 13 13 13
+  vectors: nbox = 28, nkvec = 45982
+Memory usage per processor = 52.5617 Mbytes
+Step Temp Press Volume Density 
+10850000         3500   -16861.423    283017.73    2.3499668 
+10860000    3510.6201   -15265.424    283017.73    2.3499668 
+10870000    3485.9922   -16529.978    283017.73    2.3499668 
+10880000    3498.5018    -14587.97    283017.73    2.3499668 
+10890000     3506.552   -14688.301    283017.73    2.3499668 
+10900000    3509.4126   -15496.234    283017.73    2.3499668 
+10910000    3485.1141   -14569.101    283017.73    2.3499668 
+10920000    3485.6584   -17405.206    283017.73    2.3499668 
+10930000     3469.893   -16818.251    283017.73    2.3499668 
+10940000    3497.0832   -13305.663    283017.73    2.3499668 
+10950000    3467.8709   -15186.803    283017.73    2.3499668 
+10960000    3486.0031   -17348.254    283017.73    2.3499668 
+10970000    3492.2685   -13288.786    283017.73    2.3499668 
+10980000    3446.6565   -17544.438    283017.73    2.3499668 
+10990000    3492.6435    -14428.64    283017.73    2.3499668 
+11000000    3481.9575   -15846.729    283017.73    2.3499668 
+11010000    3494.4816   -13861.298    283017.73    2.3499668 
+11020000    3441.7604   -17524.351    283017.73    2.3499668 
+11030000     3473.063   -14601.066    283017.73    2.3499668 
+11040000    3487.2599   -13950.015    283017.73    2.3499668 
+11050000    3470.2236   -13276.457    283017.73    2.3499668 
+11060000    3464.3342   -15027.615    283017.73    2.3499668 
+11070000    3441.6313   -11131.237    283017.73    2.3499668 
+11080000     3469.196   -14456.779    283017.73    2.3499668 
+11090000    3471.8307   -12637.447    283017.73    2.3499668 
+11100000    3463.1854   -17357.688    283017.73    2.3499668 
+11110000     3481.732   -18308.711    283017.73    2.3499668 
+11120000    3460.3165   -17572.871    283017.73    2.3499668 
+11130000    3473.9724   -17078.418    283017.73    2.3499668 
+11140000    3448.7553   -14553.718    283017.73    2.3499668 
+11150000    3454.6648   -13139.581    283017.73    2.3499668 
+11160000    3450.3921   -11141.663    283017.73    2.3499668 
+11170000    3465.5938   -10154.896    283017.73    2.3499668 
+11180000    3468.4296   -12602.194    283017.73    2.3499668 
+11190000    3433.0846   -13624.816    283017.73    2.3499668 
+11200000    3444.7619   -16706.239    283017.73    2.3499668 
+11210000    3458.3676   -15408.514    283017.73    2.3499668 
+11220000    3469.1317    -14694.25    283017.73    2.3499668 
+11230000    3447.7438   -14491.068    283017.73    2.3499668 
+11240000    3457.2754   -12801.417    283017.73    2.3499668 
+11250000    3455.9535   -13289.186    283017.73    2.3499668 
+11260000    3456.1399    -15642.63    283017.73    2.3499668 
+11270000     3459.902   -13605.949    283017.73    2.3499668 
+11280000    3466.7183   -14742.682    283017.73    2.3499668 
+11290000     3437.569   -12247.855    283017.73    2.3499668 
+11300000     3428.815    -15561.39    283017.73    2.3499668 
+11310000    3460.5634   -13904.846    283017.73    2.3499668 
+11320000    3450.4957   -15268.762    283017.73    2.3499668 
+11330000    3434.0548    -15799.77    283017.73    2.3499668 
+11340000     3450.854   -13140.395    283017.73    2.3499668 
+11350000    3477.4461   -16232.213    283017.73    2.3499668 
+Loop time of 92468.1 on 512 procs for 500000 steps with 19998 atoms
+
+Performance: 0.467 ns/day, 51.371 hours/ns, 5.407 timesteps/s
+100.0% CPU use with 512 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 3172.6     | 3779.5     | 4377       | 423.0 |  4.09
+Kspace  | 72980      | 77630      | 80131      | 413.6 | 83.95
+Neigh   | 24.874     | 28.463     | 31.898     |  24.1 |  0.03
+Comm    | 8107.2     | 10892      | 15912      |1212.9 | 11.78
+Output  | 1.2115     | 1.438      | 1.7604     |  11.6 |  0.00
+Modify  | 6.4677     | 7.6109     | 10.033     |  20.8 |  0.01
+Other   |            | 128.8      |            |       |  0.14
+
+Nlocal:    39.0586 ave 53 max 26 min
+Histogram: 4 12 45 62 165 122 50 44 6 2
+Nghost:    1652.37 ave 1709 max 1608 min
+Histogram: 19 31 79 94 96 97 48 31 11 6
+Neighs:    6304.47 ave 8993 max 3678 min
+Histogram: 2 8 34 106 133 106 67 40 13 3
+
+Total # of neighbors = 3227889
+Ave neighs/atom = 161.411
+Neighbor list builds = 50000
+Dangerous builds = 49990
+write_restart		restart_SiO2.dat
+EwaldDisp initialization ...
+  G vector = 0.361804
+
+
+Total wall time: 25:41:09
